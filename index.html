@@ -1,0 +1,1161 @@
+<!DOCTYPE html>
+
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>วงล้อสุ่มชื่อผู้โชคดี</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+```
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+  padding: 20px;
+  padding-bottom: env(safe-area-inset-bottom, 20px);
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+h1 {
+  text-align: center;
+  color: white;
+  margin-bottom: 30px;
+  font-size: 2.5em;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+.main-layout {
+  display: grid;
+  grid-template-columns: 350px 1fr;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.sidebar {
+  background: white;
+  border-radius: 15px;
+  padding: 25px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.wheel-section {
+  background: white;
+  border-radius: 15px;
+  padding: 30px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.section-title {
+  font-size: 1.4em;
+  color: #667eea;
+  margin-bottom: 20px;
+  border-bottom: 3px solid #667eea;
+  padding-bottom: 10px;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+label {
+  display: block;
+  margin-bottom: 5px;
+  color: #333;
+  font-weight: 600;
+}
+
+input, textarea, select {
+  width: 100%;
+  padding: 10px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: border-color 0.3s;
+}
+
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+button {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  margin-top: 10px;
+  min-height: 44px; /* iOS touch target */
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+}
+
+.btn-secondary {
+  background: #4caf50;
+  color: white;
+}
+
+.btn-secondary:hover {
+  background: #45a049;
+  transform: translateY(-2px);
+}
+
+.btn-danger {
+  background: #f44336;
+  color: white;
+}
+
+.btn-danger:hover {
+  background: #da190b;
+  transform: translateY(-2px);
+}
+
+.btn-warning {
+  background: #ff9800;
+  color: white;
+}
+
+.btn-warning:hover {
+  background: #e68900;
+  transform: translateY(-2px);
+}
+
+.participants-list {
+  margin-top: 20px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.participant-item {
+  background: #f5f5f5;
+  padding: 10px;
+  margin-bottom: 8px;
+  border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.participant-info {
+  flex: 1;
+}
+
+.participant-name {
+  font-weight: 600;
+  color: #333;
+}
+
+.participant-dept {
+  font-size: 0.85em;
+  color: #666;
+}
+
+.btn-delete {
+  background: #f44336;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.btn-delete:hover {
+  background: #da190b;
+}
+
+#wheelCanvas {
+  border-radius: 50%;
+  box-shadow: 0 0 30px rgba(0,0,0,0.2);
+  margin: 20px 0;
+}
+
+.wheel-controls {
+  display: flex;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.wheel-controls button {
+  width: auto;
+  padding: 15px 30px;
+  font-size: 18px;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-top: 15px;
+  padding: 15px;
+  background: #f9f9f9;
+  border-radius: 8px;
+}
+
+.stat-item {
+  text-align: center;
+}
+
+.stat-value {
+  font-size: 2em;
+  font-weight: bold;
+  color: #667eea;
+}
+
+.stat-label {
+  font-size: 0.9em;
+  color: #666;
+}
+
+/* Modal Styles */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.7);
+  animation: fadeIn 0.3s;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal-content {
+  background-color: white;
+  margin: 5% auto;
+  padding: 0;
+  border-radius: 15px;
+  width: 90%;
+  max-width: 800px;
+  box-shadow: 0 15px 50px rgba(0,0,0,0.5);
+  animation: slideDown 0.3s;
+}
+
+@keyframes slideDown {
+  from { transform: translateY(-50px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.modal-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 25px;
+  border-radius: 15px 15px 0 0;
+  text-align: center;
+}
+
+.modal-header h2 {
+  font-size: 2em;
+  margin-bottom: 10px;
+}
+
+.modal-body {
+  padding: 30px;
+}
+
+.winner-card {
+  text-align: center;
+  padding: 30px;
+  background: linear-gradient(135deg, #ffd89b 0%, #19547b 100%);
+  border-radius: 15px;
+  margin-bottom: 20px;
+}
+
+.winner-name {
+  font-size: 3em;
+  font-weight: bold;
+  color: white;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+  margin-bottom: 10px;
+}
+
+.winner-dept {
+  font-size: 1.5em;
+  color: #f0f0f0;
+}
+
+.event-info {
+  background: #f5f5f5;
+  padding: 20px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+}
+
+.event-info h3 {
+  color: #667eea;
+  margin-bottom: 10px;
+}
+
+.close-btn {
+  color: white;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+  cursor: pointer;
+  line-height: 20px;
+}
+
+.close-btn:hover {
+  color: #ddd;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 15px;
+}
+
+.modal-actions button {
+  flex: 1;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+@media (max-width: 1024px) {
+  .main-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    max-height: none;
+  }
+  
+  .wheel-section {
+    padding: 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  h1 {
+    font-size: 1.8em;
+    margin-bottom: 20px;
+  }
+
+  .main-layout {
+    gap: 15px;
+  }
+
+  .sidebar {
+    padding: 20px;
+  }
+
+  .section-title {
+    font-size: 1.2em;
+  }
+
+  #wheelCanvas {
+    max-width: 100%;
+    height: auto;
+  }
+
+  .wheel-controls {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .wheel-controls button {
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+  }
+
+  .stats {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .modal-content {
+    width: 95%;
+    margin: 10% auto;
+  }
+
+  .winner-name {
+    font-size: 2em;
+  }
+
+  .winner-dept {
+    font-size: 1.2em;
+  }
+
+  .modal-actions {
+    flex-direction: column;
+  }
+
+  .modal-actions button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  body {
+    padding: 10px;
+  }
+
+  h1 {
+    font-size: 1.5em;
+  }
+
+  .sidebar {
+    padding: 15px;
+  }
+
+  .wheel-section {
+    padding: 15px;
+  }
+
+  .section-title {
+    font-size: 1.1em;
+    margin-bottom: 15px;
+  }
+
+  input, textarea, select, button {
+    font-size: 16px; /* ป้องกัน iOS zoom */
+  }
+
+  .participant-item {
+    padding: 8px;
+  }
+
+  .participant-name {
+    font-size: 0.95em;
+  }
+
+  .participant-dept {
+    font-size: 0.8em;
+  }
+
+  .btn-delete {
+    padding: 4px 8px;
+    font-size: 11px;
+  }
+
+  .stat-value {
+    font-size: 1.5em;
+  }
+
+  .stat-label {
+    font-size: 0.8em;
+  }
+
+  .modal-header h2 {
+    font-size: 1.5em;
+  }
+
+  .winner-name {
+    font-size: 1.8em;
+  }
+
+  .winner-dept {
+    font-size: 1em;
+  }
+
+  .event-info {
+    padding: 15px;
+  }
+
+  .event-info h3 {
+    font-size: 1em;
+  }
+
+  .event-info p {
+    font-size: 0.9em;
+  }
+}
+
+.loading {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 3px solid rgba(255,255,255,.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Confetti overlay */
+#confettiCanvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 999;
+}
+```
+
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎰 วงล้อสุ่มชื่อผู้โชคดี</h1>
+
+```
+<div class="main-layout">
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <!-- Event Info -->
+    <div>
+      <h3 class="section-title">📋 ข้อมูล Event</h3>
+      <div class="form-group">
+        <label>ชื่อ Event</label>
+        <select id="eventSelect" onchange="loadEventData()">
+          <option value="">-- สร้าง Event ใหม่ --</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>ชื่อการแข่งขัน/กิจกรรม</label>
+        <input type="text" id="eventName" placeholder="เช่น การแข่งขันตอบคำถาม Q1 2024">
+      </div>
+      <div class="form-group">
+        <label>รายละเอียด</label>
+        <textarea id="eventDesc" placeholder="รายละเอียดเพิ่มเติม..."></textarea>
+      </div>
+      <button class="btn-primary" onclick="saveEvent()">💾 บันทึก Event</button>
+      <button class="btn-danger" onclick="clearEvent()">🗑️ ล้าง Event ปัจจุบัน</button>
+    </div>
+
+    <!-- Add Participant -->
+    <div style="margin-top: 20px;">
+      <h3 class="section-title">👤 เพิ่มผู้เข้าร่วม</h3>
+      <div class="form-group">
+        <label>ชื่อ</label>
+        <input type="text" id="firstName" placeholder="ชื่อ">
+      </div>
+      <div class="form-group">
+        <label>นามสกุล</label>
+        <input type="text" id="lastName" placeholder="นามสกุล">
+      </div>
+      <div class="form-group">
+        <label>หน่วยงาน</label>
+        <input type="text" id="department" placeholder="หน่วยงาน">
+      </div>
+      <button class="btn-secondary" onclick="addParticipant()">➕ เพิ่มผู้เข้าร่วม</button>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats">
+      <div class="stat-item">
+        <div class="stat-value" id="totalParticipants">0</div>
+        <div class="stat-label">ผู้เข้าร่วมทั้งหมด</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value" id="totalEvents">0</div>
+        <div class="stat-label">Events ทั้งหมด</div>
+      </div>
+    </div>
+
+    <!-- Participants List -->
+    <div>
+      <h3 class="section-title" style="margin-top: 20px;">📝 รายชื่อผู้เข้าร่วม</h3>
+      <div class="participants-list" id="participantsList"></div>
+    </div>
+  </div>
+
+  <!-- Wheel Section -->
+  <div class="wheel-section">
+    <h3 class="section-title">🎡 วงล้อสุ่มชื่อ</h3>
+    <canvas id="wheelCanvas" width="500" height="500" style="max-width: 100%; height: auto;"></canvas>
+    <div class="wheel-controls">
+      <button class="btn-primary" onclick="spinWheel()" id="spinBtn">
+        🎲 หมุนวงล้อ
+      </button>
+      <button class="btn-warning" onclick="resetWheel()">
+        🔄 รีเซ็ตวงล้อ
+      </button>
+    </div>
+  </div>
+</div>
+```
+
+  </div>
+
+  <!-- Winner Modal -->
+
+  <div id="winnerModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <span class="close-btn" onclick="closeModal()">&times;</span>
+        <h2>🎉 ยินดีด้วย! ผู้โชคดี 🎉</h2>
+      </div>
+      <div class="modal-body">
+        <div id="winnerCardContainer"></div>
+        <div class="modal-actions">
+          <button class="btn-secondary" onclick="exportWinnerImage()">
+            📸 Export เป็นรูปภาพ
+          </button>
+          <button class="btn-primary" onclick="closeModal()">
+            ✅ ปิด
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<canvas id="confettiCanvas"></canvas>
+
+  <script>
+    // Global variables
+    let supabase = null;
+    let participants = [];
+    let currentEvent = null;
+    let isSpinning = false;
+    let rotation = 0;
+    let currentWinner = null;
+
+    const canvas = document.getElementById('wheelCanvas');
+    const ctx = canvas.getContext('2d');
+    const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E2'];
+
+    // Supabase Configuration - ใส่ตรงนี้เลย
+    const SUPABASE_URL = 'https://zvugngzhlnopfioumflh.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp2dWduZ3pobG5vcGZpb3VtZmxoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5MzA3MjIsImV4cCI6MjA5MjUwNjcyMn0.EJncLjujUP4LqjRyrP4dUQcvpmXE8T7ax9cZdhsD5SA';
+
+    // Initialize on load
+    window.onload = function() {
+      // Initialize Supabase with hardcoded values
+      initSupabase(SUPABASE_URL, SUPABASE_KEY);
+      adjustCanvasSize();
+      loadEvents();
+      drawWheel();
+      
+      // Adjust canvas on window resize
+      window.addEventListener('resize', function() {
+        adjustCanvasSize();
+        drawWheel();
+      });
+    };
+
+    // Adjust canvas size for mobile
+    function adjustCanvasSize() {
+      const wheelSection = document.querySelector('.wheel-section');
+      const maxSize = Math.min(wheelSection.clientWidth - 60, 500);
+      canvas.width = maxSize;
+      canvas.height = maxSize;
+    }
+
+    // Supabase Configuration
+    function initSupabase(url, key) {
+      try {
+        supabase = window.supabase.createClient(url, key);
+        console.log('✓ Supabase connected successfully');
+        loadParticipants();
+        loadEvents();
+      } catch (error) {
+        console.error('Supabase connection error:', error);
+        alert('ไม่สามารถเชื่อมต่อฐานข้อมูลได้ กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ต');
+      }
+    }
+
+    // Event Management
+    async function loadEvents() {
+      if (!supabase) return;
+
+      const { data, error } = await supabase
+        .from('events')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error loading events:', error);
+        return;
+      }
+
+      const select = document.getElementById('eventSelect');
+      select.innerHTML = '<option value="">-- สร้าง Event ใหม่ --</option>';
+      
+      data.forEach(event => {
+        const option = document.createElement('option');
+        option.value = event.id;
+        option.textContent = event.event_name;
+        select.appendChild(option);
+      });
+
+      document.getElementById('totalEvents').textContent = data.length;
+    }
+
+    async function loadEventData() {
+      const eventId = document.getElementById('eventSelect').value;
+      
+      if (!eventId) {
+        document.getElementById('eventName').value = '';
+        document.getElementById('eventDesc').value = '';
+        currentEvent = null;
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('events')
+        .select('*')
+        .eq('id', eventId)
+        .single();
+
+      if (error) {
+        console.error('Error loading event:', error);
+        return;
+      }
+
+      currentEvent = data;
+      document.getElementById('eventName').value = data.event_name;
+      document.getElementById('eventDesc').value = data.event_description || '';
+    }
+
+    async function saveEvent() {
+      if (!supabase) {
+        alert('กรุณาตั้งค่า Supabase ก่อน');
+        return;
+      }
+
+      const eventName = document.getElementById('eventName').value.trim();
+      
+      if (!eventName) {
+        alert('กรุณากรอกชื่อ Event');
+        return;
+      }
+
+      const eventData = {
+        event_name: eventName,
+        event_description: document.getElementById('eventDesc').value.trim()
+      };
+
+      let result;
+      if (currentEvent) {
+        // Update existing event
+        result = await supabase
+          .from('events')
+          .update(eventData)
+          .eq('id', currentEvent.id)
+          .select()
+          .single();
+      } else {
+        // Create new event
+        result = await supabase
+          .from('events')
+          .insert([eventData])
+          .select()
+          .single();
+      }
+
+      if (result.error) {
+        alert('เกิดข้อผิดพลาด: ' + result.error.message);
+        return;
+      }
+
+      currentEvent = result.data;
+      alert('บันทึก Event สำเร็จ!');
+      loadEvents();
+      
+      // Select the saved event
+      document.getElementById('eventSelect').value = currentEvent.id;
+    }
+
+    async function clearEvent() {
+      if (!currentEvent) {
+        alert('ไม่มี Event ที่เลือก');
+        return;
+      }
+
+      if (!confirm('ต้องการลบ Event นี้และข้อมูลที่เกี่ยวข้องทั้งหมดหรือไม่?')) {
+        return;
+      }
+
+      const { error } = await supabase
+        .from('events')
+        .delete()
+        .eq('id', currentEvent.id);
+
+      if (error) {
+        alert('เกิดข้อผิดพลาด: ' + error.message);
+        return;
+      }
+
+      currentEvent = null;
+      document.getElementById('eventName').value = '';
+      document.getElementById('eventDesc').value = '';
+      document.getElementById('eventSelect').value = '';
+      
+      alert('ลบ Event สำเร็จ!');
+      loadEvents();
+    }
+
+    // Participant Management
+    async function loadParticipants() {
+      if (!supabase) return;
+
+      const { data, error } = await supabase
+        .from('participants')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error loading participants:', error);
+        return;
+      }
+
+      participants = data;
+      updateParticipantsList();
+      drawWheel();
+      document.getElementById('totalParticipants').textContent = participants.length;
+    }
+
+    async function addParticipant() {
+      if (!supabase) {
+        alert('กรุณาตั้งค่า Supabase ก่อน');
+        return;
+      }
+
+      const firstName = document.getElementById('firstName').value.trim();
+      const lastName = document.getElementById('lastName').value.trim();
+      const department = document.getElementById('department').value.trim();
+
+      if (!firstName || !lastName || !department) {
+        alert('กรุณากรอกข้อมูลให้ครบถ้วน');
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('participants')
+        .insert([{
+          first_name: firstName,
+          last_name: lastName,
+          department: department
+        }])
+        .select()
+        .single();
+
+      if (error) {
+        alert('เกิดข้อผิดพลาด: ' + error.message);
+        return;
+      }
+
+      // Clear form
+      document.getElementById('firstName').value = '';
+      document.getElementById('lastName').value = '';
+      document.getElementById('department').value = '';
+
+      loadParticipants();
+    }
+
+    async function deleteParticipant(id) {
+      if (!confirm('ต้องการลบผู้เข้าร่วมคนนี้หรือไม่?')) {
+        return;
+      }
+
+      const { error } = await supabase
+        .from('participants')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        alert('เกิดข้อผิดพลาด: ' + error.message);
+        return;
+      }
+
+      loadParticipants();
+    }
+
+    function updateParticipantsList() {
+      const list = document.getElementById('participantsList');
+      list.innerHTML = '';
+
+      if (participants.length === 0) {
+        list.innerHTML = '<p style="text-align: center; color: #999;">ยังไม่มีผู้เข้าร่วม</p>';
+        return;
+      }
+
+      participants.forEach(p => {
+        const item = document.createElement('div');
+        item.className = 'participant-item';
+        item.innerHTML = `
+          <div class="participant-info">
+            <div class="participant-name">${p.first_name} ${p.last_name}</div>
+            <div class="participant-dept">${p.department}</div>
+          </div>
+          <button class="btn-delete" onclick="deleteParticipant('${p.id}')">ลบ</button>
+        `;
+        list.appendChild(item);
+      });
+    }
+
+    // Wheel Drawing
+    function drawWheel() {
+      const centerX = canvas.width / 2;
+      const centerY = canvas.height / 2;
+      const radius = Math.min(canvas.width, canvas.height) / 2 - 30;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      if (participants.length === 0) {
+        ctx.fillStyle = '#ccc';
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+        ctx.fill();
+        
+        ctx.fillStyle = '#666';
+        ctx.font = `${Math.max(16, radius / 15)}px Arial`;
+        ctx.textAlign = 'center';
+        ctx.fillText('ยังไม่มีผู้เข้าร่วม', centerX, centerY);
+        return;
+      }
+
+      const sliceAngle = (2 * Math.PI) / participants.length;
+
+      participants.forEach((p, i) => {
+        const startAngle = rotation + i * sliceAngle;
+        const endAngle = startAngle + sliceAngle;
+
+        // Draw slice
+        ctx.fillStyle = colors[i % colors.length];
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY);
+        ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+        ctx.closePath();
+        ctx.fill();
+
+        // Draw border
+        ctx.strokeStyle = 'white';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+
+        // Draw text
+        ctx.save();
+        ctx.translate(centerX, centerY);
+        ctx.rotate(startAngle + sliceAngle / 2);
+        ctx.textAlign = 'center';
+        ctx.fillStyle = 'white';
+        const fontSize = Math.max(12, radius / 15);
+        ctx.font = `bold ${fontSize}px Arial`;
+        ctx.shadowColor = 'rgba(0,0,0,0.5)';
+        ctx.shadowBlur = 3;
+        const name = `${p.first_name} ${p.last_name}`;
+        ctx.fillText(name, radius * 0.6, 5);
+        ctx.restore();
+      });
+
+      // Draw center circle
+      const centerCircleRadius = Math.max(20, radius / 8);
+      ctx.fillStyle = 'white';
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, centerCircleRadius, 0, 2 * Math.PI);
+      ctx.fill();
+      ctx.strokeStyle = '#667eea';
+      ctx.lineWidth = 5;
+      ctx.stroke();
+
+      // Draw pointer
+      drawPointer();
+    }
+
+    function drawPointer() {
+      const centerX = canvas.width / 2;
+      const pointerY = Math.max(15, canvas.height / 25);
+      const pointerSize = Math.max(15, canvas.width / 25);
+
+      ctx.fillStyle = '#ff0000';
+      ctx.beginPath();
+      ctx.moveTo(centerX, pointerY);
+      ctx.lineTo(centerX - pointerSize, pointerY + pointerSize * 2);
+      ctx.lineTo(centerX + pointerSize, pointerY + pointerSize * 2);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = 'white';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+
+    // Wheel Spinning
+    async function spinWheel() {
+      if (isSpinning) return;
+      
+      if (participants.length === 0) {
+        alert('ยังไม่มีผู้เข้าร่วม กรุณาเพิ่มผู้เข้าร่วมก่อน');
+        return;
+      }
+
+      if (!currentEvent) {
+        alert('กรุณาสร้างหรือเลือก Event ก่อน');
+        return;
+      }
+
+      isSpinning = true;
+      document.getElementById('spinBtn').innerHTML = '<span class="loading"></span> กำลังหมุน...';
+      document.getElementById('spinBtn').disabled = true;
+
+      const spinDuration = 5000;
+      const spins = 5 + Math.random() * 3;
+      const targetRotation = spins * 2 * Math.PI;
+      const startTime = Date.now();
+      const startRotation = rotation;
+
+      function animate() {
+        const elapsed = Date.now() - startTime;
+        const progress = Math.min(elapsed / spinDuration, 1);
+        
+        // Easing function
+        const easeOut = 1 - Math.pow(1 - progress, 3);
+        
+        rotation = startRotation + targetRotation * easeOut;
+        drawWheel();
+
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        } else {
+          finishSpin();
+        }
+      }
+
+      animate();
+    }
+
+    async function finishSpin() {
+      const sliceAngle = (2 * Math.PI) / participants.length;
+      const normalizedRotation = rotation % (2 * Math.PI);
+      const pointerAngle = (2 * Math.PI - normalizedRotation) % (2 * Math.PI);
+      const winnerIndex = Math.floor(pointerAngle / sliceAngle);
+      const winner = participants[winnerIndex];
+
+      currentWinner = winner;
+
+      // Save to database
+      await supabase
+        .from('draw_results')
+        .insert([{
+          event_id: currentEvent.id,
+          participant_id: winner.id
+        }]);
+
+      // Show confetti
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 }
+      });
+
+      setTimeout(() => {
+        isSpinning = false;
+        document.getElementById('spinBtn').innerHTML = '🎲 หมุนวงล้อ';
+        document.getElementById('spinBtn').disabled = false;
+        showWinnerModal(winner);
+      }, 1000);
+    }
+
+    function resetWheel() {
+      if (isSpinning) return;
+      rotation = 0;
+      drawWheel();
+    }
+
+    // Winner Modal
+    function showWinnerModal(winner) {
+      const container = document.getElementById('winnerCardContainer');
+      container.innerHTML = `
+        <div class="winner-card" id="winnerCard">
+          <div class="winner-name">${winner.first_name} ${winner.last_name}</div>
+          <div class="winner-dept">${winner.department}</div>
+        </div>
+        <div class="event-info">
+          <h3>ข้อมูล Event</h3>
+          <p><strong>ชื่อ Event:</strong> ${currentEvent.event_name}</p>
+          ${currentEvent.event_description ? `<p><strong>รายละเอียด:</strong> ${currentEvent.event_description}</p>` : ''}
+          <p><strong>วันที่:</strong> ${new Date().toLocaleDateString('th-TH', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          })}</p>
+        </div>
+      `;
+      
+      document.getElementById('winnerModal').style.display = 'block';
+    }
+
+    function closeModal() {
+      document.getElementById('winnerModal').style.display = 'none';
+    }
+
+    async function exportWinnerImage() {
+      const card = document.getElementById('winnerCardContainer');
+      
+      try {
+        const canvas = await html2canvas(card, {
+          backgroundColor: 'white',
+          scale: 2
+        });
+        
+        canvas.toBlob(blob => {
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.download = `ผู้โชคดี_${currentWinner.first_name}_${currentWinner.last_name}.png`;
+          link.href = url;
+          link.click();
+          URL.revokeObjectURL(url);
+        });
+        
+        alert('Export สำเร็จ!');
+      } catch (error) {
+        console.error('Export error:', error);
+        alert('เกิดข้อผิดพลาดในการ Export');
+      }
+    }
+
+    // Click outside modal to close
+    window.onclick = function(event) {
+      const modal = document.getElementById('winnerModal');
+      if (event.target === modal) {
+        closeModal();
+      }
+    };
+  </script>
+
+</body>
+</html>
